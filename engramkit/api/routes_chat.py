@@ -42,11 +42,6 @@ def _extract_usage(msg):
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    from claude_agent_sdk import (
-        query as sdk_query, ClaudeAgentOptions,
-        AssistantMessage, TextBlock, ToolUseBlock, ResultMessage, StreamEvent,
-    )
-
     # 1. Resolve vault IDs + repo paths
     vault_ids = req.vault_ids or ([req.vault_id] if req.vault_id else [])
     if not vault_ids:
@@ -121,6 +116,16 @@ Answer the question using your tools (Read, Grep, Glob). Be concise.
 
     # 3. Stream response
     async def generate():
+        try:
+            from claude_agent_sdk import (
+                query as sdk_query, ClaudeAgentOptions,
+                AssistantMessage, TextBlock, ToolUseBlock, ResultMessage, StreamEvent,
+            )
+        except ImportError:
+            yield f"data: {json.dumps({'type': 'text', 'text': 'Error: chat feature requires the [chat] extra. Install with: pip install engramkit[chat]'})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            return
+
         # Send mode indicator
         yield f"data: {json.dumps({'type': 'mode', 'mode': req.mode})}\n\n"
 

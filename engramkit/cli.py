@@ -220,7 +220,6 @@ def _find_running_engramkit() -> int | None:
         try:
             data = json.loads(pid_file.read_text())
             port = data.get("port", 0)
-            pid = data.get("pid", 0)
             # Verify it's actually running
             resp = urllib.request.urlopen(f"http://localhost:{port}/api/config", timeout=1)
             if resp.status == 200:
@@ -242,7 +241,7 @@ def cmd_dashboard(args):
     existing_port = _find_running_engramkit()
     if existing_port:
         print(f"\n  EngramKit dashboard already running at http://localhost:{existing_port}")
-        print(f"  Opening browser...\n")
+        print("  Opening browser...\n")
         webbrowser.open(f"http://localhost:{existing_port}")
         return
 
@@ -263,7 +262,7 @@ def cmd_dashboard(args):
     pid_file.write_text(json.dumps({"port": port, "pid": os.getpid()}))
 
     print(f"  http://localhost:{port}")
-    print(f"  Press Ctrl+C to stop\n")
+    print("  Press Ctrl+C to stop\n")
 
     # Open browser after short delay
     def open_browser():

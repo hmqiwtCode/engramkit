@@ -2,29 +2,15 @@
 
 import json
 import os
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 
 from engramkit.mcp.server import (
     handle_jsonrpc,
-    handle_status,
-    handle_search,
-    handle_wake_up,
-    handle_recall,
-    handle_save,
-    handle_kg_add,
-    handle_kg_query,
-    handle_kg_timeline,
-    handle_kg_invalidate,
-    handle_diary_write,
-    handle_gc,
-    handle_config,
     TOOLS,
     HANDLERS,
 )
-from engramkit.storage.vault import Vault, VaultManager
+from engramkit.storage.vault import VaultManager
 
 
 @pytest.fixture

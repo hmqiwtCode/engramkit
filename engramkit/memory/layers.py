@@ -1,14 +1,11 @@
 """Memory layers — L0 identity, L1 essential, L2 on-demand, L3 deep search."""
 
-from pathlib import Path
-from datetime import datetime
 
 from engramkit.config import ENGRAMKIT_HOME
 from engramkit.storage.vault import Vault
 from engramkit.search.hybrid import hybrid_search
 from engramkit.memory.token_budget import (
-    TokenBudget, BudgetReport, count_tokens, score_chunk,
-    select_within_budget,
+    TokenBudget, BudgetReport, count_tokens, select_within_budget,
 )
 
 

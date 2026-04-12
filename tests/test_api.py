@@ -1,15 +1,11 @@
 """Integration tests for the FastAPI REST API — all route modules."""
 
 import os
-import json
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from engramkit.api.server import app
-from engramkit.storage.vault import Vault, VaultManager
 
 
 @pytest.fixture

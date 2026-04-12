@@ -1,8 +1,5 @@
 """Tests for vault storage layer."""
 
-import tempfile
-import shutil
-from pathlib import Path
 
 import pytest
 

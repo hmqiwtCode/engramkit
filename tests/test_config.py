@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 
-import pytest
 
 from engramkit.config import (
     ENGRAMKIT_HOME,
@@ -62,16 +61,10 @@ class TestEngramKitHome:
     def test_default_path(self, monkeypatch):
         """Without ENGRAMKIT_HOME env var, should default to ~/.engramkit."""
         monkeypatch.delenv("ENGRAMKIT_HOME", raising=False)
-        # Re-evaluate — the module-level ENGRAMKIT_HOME is already set,
-        # but we can check the pattern
-        expected = Path.home() / ".engramkit"
-        # Since ENGRAMKIT_HOME is set at import time, we verify the pattern
         assert isinstance(ENGRAMKIT_HOME, Path)
 
     def test_env_override(self, monkeypatch, tmp_path):
         """ENGRAMKIT_HOME env var should be respected when the module is loaded."""
-        # This tests the pattern, not the actual reloading
-        custom = str(tmp_path / "custom_engramkit")
         result = Path(os.environ.get("ENGRAMKIT_HOME", Path.home() / ".engramkit"))
         assert isinstance(result, Path)
 

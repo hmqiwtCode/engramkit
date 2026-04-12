@@ -1,15 +1,9 @@
 """Shared fixtures for EngramKit test suite."""
 
-import os
-import shutil
-import sqlite3
-from datetime import datetime, timedelta
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from engramkit.storage.vault import Vault, VaultManager
+from engramkit.storage.vault import Vault
 from engramkit.storage.schema import init_db
 from engramkit.graph.knowledge_graph import KnowledgeGraph
 

@@ -1,6 +1,6 @@
 """Tests for smart 800-char chunker."""
 
-from engramkit.ingest.chunker import smart_chunk, content_hash, file_hash
+from engramkit.ingest.chunker import smart_chunk, content_hash
 
 
 class TestContentHash:

@@ -1,7 +1,6 @@
 """Git-aware change detection — use git as source of truth for what changed."""
 
 import subprocess
-from pathlib import Path
 
 
 def is_git_repo(repo_path: str) -> bool:

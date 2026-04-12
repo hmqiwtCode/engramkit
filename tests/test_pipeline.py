@@ -1,9 +1,6 @@
 """Tests for the ingestion pipeline — scan, process, and mine."""
 
-import os
-from pathlib import Path
 
-import pytest
 
 from engramkit.ingest.pipeline import scan_files, process_file, mine
 from engramkit.ingest.chunker import file_hash
@@ -215,9 +212,7 @@ class TestMine:
         vault = Vault(tmp_path / "mine_vault")
         vault.open()
         try:
-            stats = mine(
-                str(sample_project), vault, wing="test", dry_run=True
-            )
+            mine(str(sample_project), vault, wing="test", dry_run=True)
             total = vault.conn.execute(
                 "SELECT COUNT(*) as c FROM chunks"
             ).fetchone()["c"]

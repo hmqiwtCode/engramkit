@@ -5,7 +5,7 @@ import fnmatch
 from pathlib import Path
 
 from engramkit.config import READABLE_EXTENSIONS, SKIP_DIRS, SKIP_FILENAMES
-from engramkit.ingest.chunker import smart_chunk, file_hash, content_hash
+from engramkit.ingest.chunker import smart_chunk, file_hash
 from engramkit.ingest.secret_scanner import is_secret_file, contains_secret
 from engramkit.storage.vault import Vault
 
@@ -221,7 +221,6 @@ def mine(
 
     # Process and store per-file (stream, not collect-all-then-flush)
     import time
-    import sys as _sys
     mine_start = time.perf_counter()
     total_files = len(files)
     first_file = True

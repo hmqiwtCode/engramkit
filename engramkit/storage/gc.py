@@ -70,4 +70,4 @@ def run_gc(vault: Vault, dry_run: bool = False, retention_days: int = 30):
     vault.conn.commit()
 
     print(f"\n  Removed {len(rows)} stale chunks.")
-    print(f"  GC log updated.\n")
+    print("  GC log updated.\n")

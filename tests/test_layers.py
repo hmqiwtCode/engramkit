@@ -1,13 +1,11 @@
 """Tests for memory layers — L0 identity, L1 essential, L2 recall, L3 search."""
 
-from pathlib import Path
-from datetime import datetime
 
 import pytest
 
 from engramkit.storage.vault import Vault
 from engramkit.memory.layers import MemoryStack
-from engramkit.memory.token_budget import TokenBudget, BudgetReport
+from engramkit.memory.token_budget import TokenBudget
 
 
 @pytest.fixture
@@ -16,7 +14,6 @@ def memory_vault(tmp_path):
     vault = Vault(tmp_path / "memory_vault")
     vault.open()
 
-    now = datetime.now().isoformat()
     chunks = [
         {
             "content_hash": "mem1",

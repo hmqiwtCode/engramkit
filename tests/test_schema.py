@@ -1,9 +1,7 @@
 """Tests for SQLite schema initialization, FTS5, and triggers."""
 
 import sqlite3
-from pathlib import Path
 
-import pytest
 
 from engramkit.storage.schema import init_db, SCHEMA_VERSION
 

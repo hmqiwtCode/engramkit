@@ -2,7 +2,7 @@
 
 import pytest
 
-from engramkit.storage.chromadb_backend import ChromaBackend, COLLECTION_NAME
+from engramkit.storage.chromadb_backend import ChromaBackend
 
 
 @pytest.fixture

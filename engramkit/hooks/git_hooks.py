@@ -1,7 +1,6 @@
 """Git hook handlers — post-commit, post-merge, and Claude Code auto-save."""
 
 import json
-import os
 import stat
 import sys
 from pathlib import Path
@@ -44,7 +43,7 @@ def install_hooks(repo_path: str):
                 continue
             # Append to existing hook
             with open(hook_path, "a") as f:
-                f.write(f"\n# --- EngramKit hook (appended) ---\n")
+                f.write("\n# --- EngramKit hook (appended) ---\n")
                 f.write(content.split("\n", 2)[2])  # Skip shebang
             print(f"  {name}: appended to existing hook")
         else:
@@ -56,7 +55,7 @@ def install_hooks(repo_path: str):
         installed.append(name)
 
     if installed:
-        print(f"\n  Git hooks active. On commit/pull, EngramKit will auto-mine changed files.")
+        print("\n  Git hooks active. On commit/pull, EngramKit will auto-mine changed files.")
 
     # Also install Claude Code hooks
     install_claude_hooks(repo_path)
@@ -74,7 +73,6 @@ def install_claude_hooks(repo_path: str):
     engramkit_bin = shutil.which("engramkit")
     if engramkit_bin:
         # Use the same Python that engramkit was installed with
-        import sysconfig
         python_path = Path(engramkit_bin).parent / "python3"
         if not python_path.exists():
             python_path = Path(sys.executable)

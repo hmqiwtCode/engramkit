@@ -1,7 +1,5 @@
 """Tests for MCP server."""
 
-import json
-import pytest
 
 from engramkit.mcp.server import handle_jsonrpc
 

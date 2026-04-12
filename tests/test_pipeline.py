@@ -73,6 +73,44 @@ class TestScanFiles:
         files = scan_files(str(empty))
         assert files == []
 
+    def test_extra_ignores_skips_named_dir(self, sample_project):
+        """extra_ignores should skip directories with the given names."""
+        docs = sample_project / "docs"
+        docs.mkdir()
+        (docs / "intro.md").write_text("# Intro\n" * 20)
+        baseline = scan_files(str(sample_project))
+        assert any(f.name == "intro.md" for f in baseline), "fixture sanity check"
+
+        files = scan_files(str(sample_project), extra_ignores=["docs"])
+        assert not any(f.name == "intro.md" for f in files)
+
+    def test_extra_ignores_matches_any_depth(self, sample_project):
+        """A named-dir ignore should match that name at any nesting level."""
+        nested = sample_project / "lib" / "docs"
+        nested.mkdir()
+        (nested / "api.md").write_text("# API\n" * 20)
+        files = scan_files(str(sample_project), extra_ignores=["docs"])
+        assert not any(f.name == "api.md" for f in files)
+
+    def test_extra_ignores_none_is_noop(self, sample_project):
+        """Passing None or [] should behave identically to omitting the argument."""
+        default = {f.name for f in scan_files(str(sample_project))}
+        none_list = {f.name for f in scan_files(str(sample_project), extra_ignores=None)}
+        empty = {f.name for f in scan_files(str(sample_project), extra_ignores=[])}
+        assert default == none_list == empty
+
+    def test_extra_ignores_multiple(self, sample_project):
+        """Multiple ignore names are all skipped."""
+        (sample_project / "docs").mkdir()
+        (sample_project / "docs" / "a.md").write_text("# A\n" * 20)
+        (sample_project / "examples").mkdir()
+        (sample_project / "examples" / "b.py").write_text("x = 1\n" * 20)
+
+        files = scan_files(str(sample_project), extra_ignores=["docs", "examples"])
+        names = {f.name for f in files}
+        assert "a.md" not in names
+        assert "b.py" not in names
+
     def test_skip_filenames(self, sample_project):
         """Files in SKIP_FILENAMES should be excluded."""
         (sample_project / "package-lock.json").write_text("{}")
@@ -217,6 +255,25 @@ class TestMine:
                 "SELECT COUNT(*) as c FROM chunks"
             ).fetchone()["c"]
             assert total == 0
+        finally:
+            vault.close()
+
+    def test_mine_ignore_skips_directories(self, sample_project, tmp_path):
+        """Directories named via the ignore list should produce no chunks."""
+        docs = sample_project / "docs"
+        docs.mkdir()
+        (docs / "manual.md").write_text(
+            "# Manual\n\n" + "Documentation content that is long enough to chunk. " * 30
+        )
+        vault = Vault(tmp_path / "mine_vault")
+        vault.open()
+        try:
+            mine(str(sample_project), vault, wing="test", ignore=["docs"])
+            stored_paths = {
+                row["file_path"]
+                for row in vault.conn.execute("SELECT DISTINCT file_path FROM chunks")
+            }
+            assert not any(p.startswith("docs/") for p in stored_paths)
         finally:
             vault.close()
 

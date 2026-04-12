@@ -10,8 +10,17 @@ from engramkit.ingest.secret_scanner import is_secret_file, contains_secret
 from engramkit.storage.vault import Vault
 
 
-def scan_files(project_dir: str, respect_gitignore: bool = True) -> list[Path]:
-    """Walk directory tree and return list of mineable files."""
+def scan_files(
+    project_dir: str,
+    respect_gitignore: bool = True,
+    extra_ignores: list[str] = None,
+) -> list[Path]:
+    """Walk directory tree and return list of mineable files.
+
+    ``extra_ignores`` adds directory names to the built-in SKIP_DIRS set for
+    this scan only — use it to exclude project-specific folders without
+    editing .gitignore. Matching is by directory name at any depth.
+    """
     project_path = Path(project_dir).expanduser().resolve()
     gitignore_patterns = []
 
@@ -20,10 +29,12 @@ def scan_files(project_dir: str, respect_gitignore: bool = True) -> list[Path]:
         if gitignore_path.exists():
             gitignore_patterns = _load_gitignore(gitignore_path)
 
+    skip_dirs = SKIP_DIRS | {d for d in (extra_ignores or []) if d}
+
     files = []
     for root, dirs, filenames in os.walk(project_path):
         # Filter directories in-place
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        dirs[:] = [d for d in dirs if d not in skip_dirs]
 
         root_path = Path(root)
         for filename in filenames:
@@ -132,11 +143,14 @@ def mine(
     full: bool = False,
     max_workers: int = 4,
     dry_run: bool = False,
+    ignore: list[str] = None,
 ) -> dict:
     """
     Mine a project directory into a vault.
 
     Uses git diff for incremental mining when available.
+    ``ignore`` is an optional list of extra directory names to skip on top
+    of the built-in SKIP_DIRS and the project .gitignore.
     Returns stats dict with counts.
     """
     from engramkit.ingest.git_differ import (
@@ -177,7 +191,7 @@ def mine(
                     vault.mark_file_deleted(dpath)
 
                 # Only scan changed files
-                all_files = scan_files(project_dir)
+                all_files = scan_files(project_dir, extra_ignores=ignore)
                 files = [f for f in all_files if f.relative_to(project_path).as_posix() in changed_paths]
             else:
                 # No changes since last commit
@@ -185,9 +199,9 @@ def mine(
                 git_mode = True
         else:
             # No last_commit stored or same commit — full scan with file-hash skip
-            files = scan_files(project_dir)
+            files = scan_files(project_dir, extra_ignores=ignore)
     else:
-        files = scan_files(project_dir)
+        files = scan_files(project_dir, extra_ignores=ignore)
 
     generation = vault.next_generation()
 

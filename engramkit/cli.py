@@ -33,6 +33,11 @@ def cmd_mine(args):
 
     wing = args.wing or vault.get_meta("wing") or Path(repo_path).name.lower().replace("-", "_")
 
+    # Flatten repeated --ignore flags and split CSV values
+    ignore = []
+    for item in (args.ignore or []):
+        ignore.extend(part.strip() for part in item.split(",") if part.strip())
+
     try:
         mine(
             project_dir=repo_path,
@@ -41,6 +46,7 @@ def cmd_mine(args):
             room=args.room or "general",
             full=args.full,
             dry_run=args.dry_run,
+            ignore=ignore or None,
         )
     finally:
         vault.close()
@@ -303,6 +309,13 @@ def main():
     p.add_argument("--room", default="general", help="Room name (default: general)")
     p.add_argument("--full", action="store_true", help="Full re-mine (ignore cache)")
     p.add_argument("--dry-run", action="store_true", help="Preview without storing")
+    p.add_argument(
+        "--ignore",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Extra directory name to skip; repeat or comma-separate (e.g. --ignore docs --ignore tests or --ignore docs,tests)",
+    )
 
     # search
     p = sub.add_parser("search", help="Hybrid search")

@@ -115,9 +115,9 @@ engramkit init <directory> [--wing NAME]
 Initialize a vault for a repository. Sets up SQLite schema, ChromaDB collection, and stores the wing name.
 
 ```
-engramkit mine <directory> [--wing NAME] [--room NAME] [--full] [--dry-run]
+engramkit mine <directory> [--wing NAME] [--room NAME] [--full] [--dry-run] [--ignore NAME ...]
 ```
-Mine a project into its vault. Uses git diff for incremental mining when available. `--full` forces a complete rescan. `--dry-run` previews without storing.
+Mine a project into its vault. Uses git diff for incremental mining when available. `--full` forces a complete rescan. `--dry-run` previews without storing. `--ignore` adds directory names to the skip set on top of the built-in list and `.gitignore` — repeat the flag or comma-separate names (e.g. `--ignore docs --ignore examples` or `--ignore docs,examples`).
 
 ```
 engramkit search <query> [-d DIRECTORY] [--wing NAME] [--room NAME] [-n COUNT]

@@ -119,15 +119,18 @@ engramkit mine <directory> [--wing NAME] [--room NAME] [--full] [--dry-run] [--i
 ```
 Mine a project into its vault. Uses git diff for incremental mining when available. `--full` forces a complete rescan. `--dry-run` previews without storing.
 
-`--ignore` adds extra folders to the skip set on top of the built-in list and `.gitignore`. Repeat the flag or comma-separate:
+`--ignore` adds extra folders to the skip set on top of the built-in list and `.gitignore`. **Patterns are anchored at the project root** (fnmatch semantics). Repeat the flag or comma-separate:
 
 | Pattern | Meaning |
 |---|---|
-| `--ignore docs` | any folder named `docs` at any depth |
-| `--ignore lib/docs` | only the `docs` folder directly under `lib/`, not other `docs/` folders |
-| `--ignore "lib/docs/*"` | same as above — trailing `/`, `/*`, `/**` normalize to the folder itself |
-| `--ignore "lib/*"` | every direct child folder of `lib/` |
+| `--ignore docs` | the `docs/` folder **at the project root only** (not `lib/docs/`) |
+| `--ignore lib/docs` | the `docs/` folder directly under `lib/`, specifically |
+| `--ignore "lib/docs/*"` | same as above — trailing `/`, `/*`, `/**` all normalize to the folder itself |
+| `--ignore "lib/*"` | **everything under `lib/`** — direct and nested, files and folders |
+| `--ignore "**/docs"` | any `docs/` folder **nested** under some other folder (escape hatch for multi-depth matches) |
 | `--ignore docs,examples` | shorthand for `--ignore docs --ignore examples` |
+
+For "match a name at any depth" use both patterns: `--ignore docs --ignore "**/docs"`.
 
 ```
 engramkit search <query> [-d DIRECTORY] [--wing NAME] [--room NAME] [-n COUNT]

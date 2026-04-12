@@ -73,24 +73,18 @@ class TestScanFiles:
         files = scan_files(str(empty))
         assert files == []
 
-    def test_extra_ignores_skips_named_dir(self, sample_project):
-        """extra_ignores should skip directories with the given names."""
-        docs = sample_project / "docs"
-        docs.mkdir()
-        (docs / "intro.md").write_text("# Intro\n" * 20)
-        baseline = scan_files(str(sample_project))
-        assert any(f.name == "intro.md" for f in baseline), "fixture sanity check"
-
-        files = scan_files(str(sample_project), extra_ignores=["docs"])
-        assert not any(f.name == "intro.md" for f in files)
-
-    def test_extra_ignores_matches_any_depth(self, sample_project):
-        """A named-dir ignore should match that name at any nesting level."""
+    def test_extra_ignores_root_only_by_default(self, sample_project):
+        """Bare 'docs' is anchored at the project root — nested docs/ is preserved."""
+        (sample_project / "docs").mkdir()
+        (sample_project / "docs" / "root_doc.md").write_text("# Root\n" * 20)
         nested = sample_project / "lib" / "docs"
         nested.mkdir()
-        (nested / "api.md").write_text("# API\n" * 20)
+        (nested / "lib_doc.md").write_text("# Lib\n" * 20)
+
         files = scan_files(str(sample_project), extra_ignores=["docs"])
-        assert not any(f.name == "api.md" for f in files)
+        names = {f.name for f in files}
+        assert "root_doc.md" not in names  # root docs/ skipped
+        assert "lib_doc.md" in names       # nested lib/docs/ preserved
 
     def test_extra_ignores_none_is_noop(self, sample_project):
         """Passing None or [] should behave identically to omitting the argument."""
@@ -100,7 +94,7 @@ class TestScanFiles:
         assert default == none_list == empty
 
     def test_extra_ignores_multiple(self, sample_project):
-        """Multiple ignore names are all skipped."""
+        """Multiple anchored ignores are all skipped."""
         (sample_project / "docs").mkdir()
         (sample_project / "docs" / "a.md").write_text("# A\n" * 20)
         (sample_project / "examples").mkdir()
@@ -112,7 +106,7 @@ class TestScanFiles:
         assert "b.py" not in names
 
     def test_extra_ignores_specific_path(self, sample_project):
-        """A path with '/' should only skip that specific path, not all dirs of the same name."""
+        """A 'lib/docs' pattern only skips that exact path, not same-named folders elsewhere."""
         (sample_project / "docs").mkdir()
         (sample_project / "docs" / "root_doc.md").write_text("# Root\n" * 20)
         nested_docs = sample_project / "lib" / "docs"
@@ -135,33 +129,45 @@ class TestScanFiles:
             names = {f.name for f in files}
             assert "api.md" not in names, f"pattern {pat!r} failed to skip lib/docs"
 
-    def test_extra_ignores_path_glob(self, sample_project):
-        """'lib/*' should skip every direct child directory of lib/."""
-        (sample_project / "lib" / "docs").mkdir()
-        (sample_project / "lib" / "docs" / "a.md").write_text("# A\n" * 20)
+    def test_extra_ignores_path_glob_covers_direct_and_nested(self, sample_project):
+        """'lib/*' should exclude every file and folder under lib/ — direct and nested."""
+        # Direct file under lib/
+        (sample_project / "lib" / "top.py").write_text("x = 1\n" * 20)
+        # Direct folder with file
         (sample_project / "lib" / "helpers").mkdir()
         (sample_project / "lib" / "helpers" / "h.py").write_text("x = 1\n" * 20)
+        # Deeply nested
+        deep = sample_project / "lib" / "docs" / "deep"
+        deep.mkdir(parents=True)
+        (deep / "api.md").write_text("# API\n" * 20)
 
         files = scan_files(str(sample_project), extra_ignores=["lib/*"])
         names = {f.name for f in files}
-        assert "a.md" not in names
-        assert "h.py" not in names
+        assert "top.py" not in names      # direct file
+        assert "h.py" not in names        # one level down
+        assert "api.md" not in names      # deeply nested
+        # But root-level files like main.py survive
+        assert "main.py" in names
 
-    def test_extra_ignores_mixed_name_and_path(self, sample_project):
-        """Bare-name and path-pattern ignores can coexist."""
-        (sample_project / "node_modules_manual").mkdir()
-        (sample_project / "node_modules_manual" / "x.py").write_text("y = 1\n" * 20)
+    def test_extra_ignores_glob_nested_docs(self, sample_project):
+        """'**/docs' is the escape hatch to match docs/ at any depth, including root."""
+        (sample_project / "docs").mkdir()
+        (sample_project / "docs" / "a.md").write_text("# A\n" * 20)
         nested = sample_project / "lib" / "docs"
         nested.mkdir()
-        (nested / "api.md").write_text("# API\n" * 20)
+        (nested / "b.md").write_text("# B\n" * 20)
 
-        files = scan_files(
-            str(sample_project),
-            extra_ignores=["node_modules_manual", "lib/docs"],
-        )
+        # **/docs only catches the nested ones (fnmatch requires something before /docs)
+        files = scan_files(str(sample_project), extra_ignores=["**/docs"])
         names = {f.name for f in files}
-        assert "x.py" not in names
-        assert "api.md" not in names
+        assert "b.md" not in names  # nested docs/ pruned
+        assert "a.md" in names      # root docs/ not matched by **/docs
+
+        # To catch both, pass both patterns — anchored rule is explicit
+        files = scan_files(str(sample_project), extra_ignores=["docs", "**/docs"])
+        names = {f.name for f in files}
+        assert "a.md" not in names
+        assert "b.md" not in names
 
     def test_skip_filenames(self, sample_project):
         """Files in SKIP_FILENAMES should be excluded."""

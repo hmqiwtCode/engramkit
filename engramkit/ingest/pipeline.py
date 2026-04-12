@@ -10,33 +10,34 @@ from engramkit.ingest.secret_scanner import is_secret_file, contains_secret
 from engramkit.storage.vault import Vault
 
 
-def _parse_extra_ignores(extra_ignores: list[str]) -> tuple[set[str], list[str]]:
-    """Split user-supplied ignores into bare names and path patterns.
+def _parse_extra_ignores(extra_ignores: list[str]) -> list[str]:
+    """Normalize user-supplied ignores to anchored project-relative patterns.
 
-    - Values with no ``/`` are treated as directory NAMES and matched at any
-      depth (equivalent to extending the built-in SKIP_DIRS).
-    - Values with a ``/`` are treated as project-relative directory paths
-      and matched by fnmatch against each candidate's relative path.
-      Trailing ``/``, ``/*``, or ``/**`` are normalized away so that
-      ``lib/docs``, ``lib/docs/``, ``lib/docs/*``, and ``lib/docs/**`` all
-      mean the same thing: skip the ``lib/docs`` directory.
+    All patterns are matched via fnmatch against each candidate's POSIX
+    path, anchored at the project root. That means ``docs`` matches only
+    the top-level ``docs/`` folder — it does NOT match ``lib/docs/``.
+    Use ``**/docs`` (or a glob) if you want nested matches too.
+
+    Trailing ``/``, ``/*``, and ``/**`` are stripped so ``lib/docs``,
+    ``lib/docs/``, ``lib/docs/*``, and ``lib/docs/**`` all mean the same
+    thing: skip the ``lib/docs`` folder and everything inside it.
     """
-    names: set[str] = set()
-    paths: list[str] = []
+    patterns: list[str] = []
     for raw in extra_ignores or []:
         pat = (raw or "").strip()
         if not pat:
             continue
-        if "/" in pat:
-            norm = pat.rstrip("/")
-            for suffix in ("/**", "/*"):
-                if norm.endswith(suffix):
-                    norm = norm[: -len(suffix)]
-            if norm:
-                paths.append(norm)
-        else:
-            names.add(pat)
-    return names, paths
+        norm = pat.rstrip("/")
+        for suffix in ("/**", "/*"):
+            if norm.endswith(suffix):
+                norm = norm[: -len(suffix)]
+        if norm:
+            patterns.append(norm)
+    return patterns
+
+
+def _matches_ignore(rel_path: str, patterns: list[str]) -> bool:
+    return bool(patterns) and any(fnmatch.fnmatch(rel_path, p) for p in patterns)
 
 
 def scan_files(
@@ -46,9 +47,9 @@ def scan_files(
 ) -> list[Path]:
     """Walk directory tree and return list of mineable files.
 
-    ``extra_ignores`` accepts either bare directory names (matched at any
-    depth) or project-relative path patterns like ``lib/docs`` or
-    ``lib/*`` (matched against each candidate's relative path).
+    ``extra_ignores`` accepts project-relative path patterns (see
+    :func:`_parse_extra_ignores`). Patterns match both directories
+    (pruning the walk) and individual files.
     """
     project_path = Path(project_dir).expanduser().resolve()
     gitignore_patterns = []
@@ -58,12 +59,10 @@ def scan_files(
         if gitignore_path.exists():
             gitignore_patterns = _load_gitignore(gitignore_path)
 
-    name_ignores, path_ignores = _parse_extra_ignores(extra_ignores or [])
-    skip_dirs = SKIP_DIRS | name_ignores
+    ignore_patterns = _parse_extra_ignores(extra_ignores or [])
 
     files = []
     for root, dirs, filenames in os.walk(project_path):
-        # Filter directories in-place: bare-name match OR path-pattern match.
         try:
             root_rel = Path(root).relative_to(project_path).as_posix()
         except ValueError:
@@ -73,12 +72,11 @@ def scan_files(
 
         kept = []
         for d in dirs:
-            if d in skip_dirs:
+            if d in SKIP_DIRS:
                 continue
-            if path_ignores:
-                rel_child = f"{root_rel}/{d}" if root_rel else d
-                if any(fnmatch.fnmatch(rel_child, p) for p in path_ignores):
-                    continue
+            rel_child = f"{root_rel}/{d}" if root_rel else d
+            if _matches_ignore(rel_child, ignore_patterns):
+                continue
             kept.append(d)
         dirs[:] = kept
 
@@ -98,14 +96,18 @@ def scan_files(
             if is_secret_file(str(filepath)):
                 continue
 
+            # Skip against user-supplied ignore patterns (covers files under
+            # e.g. `lib/*` so the flag matches folders *and* their contents).
+            try:
+                rel_file = filepath.relative_to(project_path).as_posix()
+            except ValueError:
+                rel_file = filename
+            if _matches_ignore(rel_file, ignore_patterns):
+                continue
+
             # Skip gitignored files
-            if gitignore_patterns:
-                try:
-                    relative = filepath.relative_to(project_path).as_posix()
-                    if _is_gitignored(relative, gitignore_patterns):
-                        continue
-                except ValueError:
-                    pass
+            if gitignore_patterns and _is_gitignored(rel_file, gitignore_patterns):
+                continue
 
             files.append(filepath)
 

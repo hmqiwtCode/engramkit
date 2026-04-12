@@ -1,0 +1,18 @@
+{
+  "name": "engramkit",
+  "owner": {
+    "name": "hmqiwtCode",
+    "url": "https://github.com/hmqiwtCode"
+  },
+  "plugins": [
+    {
+      "name": "engramkit",
+      "source": "./.claude-plugin",
+      "description": "Long-term memory for Claude Code — hybrid search, git-aware ingestion, 12 MCP tools. SessionStart hook auto-loads memory each session; Stop + PreCompact hooks auto-save decisions and insights.",
+      "version": "0.1.2",
+      "author": {
+        "name": "Quy Huynh"
+      }
+    }
+  ]
+}

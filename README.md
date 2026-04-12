@@ -111,13 +111,22 @@ engramkit status
 
 ### Option A — Claude Code plugin (recommended)
 
+One-time setup to tell Claude Code where to find the plugin, then install it:
+
 ```bash
+# 1. Index your codebase
 cd ~/your-project
-engramkit mine .                  # 1. index your codebase
-/plugin install engramkit         # 2. inside Claude Code — registers MCP + all hooks
+engramkit mine .
 ```
 
-The plugin ships `SessionStart`, `Stop`, and `PreCompact` hooks and the MCP server together, so there's no `settings.json` to hand-edit.
+Inside Claude Code:
+
+```text
+/plugin marketplace add hmqiwtCode/engramkit       # once per user; registers the repo
+/plugin install engramkit@engramkit                # installs MCP + SessionStart/Stop/PreCompact hooks
+```
+
+After that, every `claude` session in any project auto-loads the EngramKit memory on start — no `settings.json` editing, no per-project wiring.
 
 ### Option B — manual wiring
 

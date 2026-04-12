@@ -109,7 +109,17 @@ engramkit status
 
 ## Claude Code Integration
 
-### Quick Setup
+### Option A — Claude Code plugin (recommended)
+
+```bash
+cd ~/your-project
+engramkit mine .                  # 1. index your codebase
+/plugin install engramkit         # 2. inside Claude Code — registers MCP + all hooks
+```
+
+The plugin ships `SessionStart`, `Stop`, and `PreCompact` hooks and the MCP server together, so there's no `settings.json` to hand-edit.
+
+### Option B — manual wiring
 
 ```bash
 cd ~/your-project
@@ -117,7 +127,7 @@ cd ~/your-project
 # 1. Mine your codebase
 engramkit mine .
 
-# 2. Install auto-save hooks
+# 2. Install auto-save hooks (git hooks + Claude Code hooks)
 engramkit hooks install -d .
 
 # 3. Register MCP server for your AI tool
@@ -125,22 +135,12 @@ claude mcp add engramkit -- engramkit-mcp                      # Claude Code
 # codex mcp add engramkit -- python3 -m engramkit.mcp.server   # Codex (coming soon)
 ```
 
-What each step does:
-- **Step 1** — indexes your code into a searchable vault
-- **Step 2** — installs git hooks (auto re-mine on commit/pull) + Claude Code hooks (auto-save conversations)
-- **Step 3** — gives your AI tool access to 12 EngramKit memory tools
+### What Claude does with it
 
-Now start Claude Code:
-
-```bash
-claude
-```
-
-Claude will:
-1. Call `engramkit_wake_up` on session start → loads identity + recent context (L0 + L1)
-2. Call `engramkit_search` before answering code questions → finds relevant chunks
-3. Auto-save important decisions/insights via the Stop hook
-4. Emergency-save everything before context compression
+1. **On session start** — the `SessionStart` hook runs `engramkit wake-up` and injects identity + recent-context (~170 tokens) directly into Claude's context. No tool call needed.
+2. **Before answering** about past decisions / architecture / code history — the protocol embedded in every `engramkit_status` and `engramkit_wake_up` response reminds Claude to call `engramkit_search` first rather than guess.
+3. **During the session** — the `Stop` hook watches message count + content importance; when a decision, architecture change, or bug fix is detected it blocks the response and tells Claude to `engramkit_save` before continuing.
+4. **Before context compression** — the `PreCompact` hook forces a comprehensive save so nothing important is lost.
 
 ### Available Tools (12)
 

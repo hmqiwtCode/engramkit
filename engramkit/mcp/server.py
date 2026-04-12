@@ -260,6 +260,7 @@ def handle_wake_up(params: dict) -> dict:
             "l0": {"tokens": result["l0_report"].tokens_used, "budget": result["l0_report"].tokens_budget},
             "l1": {"tokens": result["l1_report"].tokens_used, "budget": result["l1_report"].tokens_budget,
                     "loaded": result["l1_report"].chunks_loaded, "deduped": result["l1_report"].chunks_skipped_dedup},
+            "protocol": ENGRAMKIT_PROTOCOL,
         }
     finally:
         vault.close()

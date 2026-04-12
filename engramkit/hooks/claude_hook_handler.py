@@ -1,11 +1,13 @@
 """
 EngramKit Claude Code Hook Handler
 
-Handles Stop and PreCompact events from Claude Code.
-- Stop: Every N messages, analyzes importance and blocks Claude to save.
+Handles Claude Code lifecycle events.
+- SessionStart: Loads wake-up context (identity + essential memory) into the session.
+- Stop: Every N messages, analyzes importance and blocks Claude to force a save.
 - PreCompact: Emergency save before context compression.
 
 Usage:
+    python -m engramkit.hooks.claude_hook_handler session-start
     python -m engramkit.hooks.claude_hook_handler stop
     python -m engramkit.hooks.claude_hook_handler precompact
 """
@@ -156,16 +158,73 @@ Save everything, then allow compression to proceed."""
     }))
 
 
+def handle_session_start():
+    """Load wake-up context at session start and inject it into Claude's context.
+
+    Silent when there's no engramkit vault for the current directory — the
+    hook should never break a session.
+    """
+    try:
+        json.load(sys.stdin)  # drain stdin (session_id, etc.); not used here
+    except Exception:
+        pass
+
+    try:
+        from engramkit.storage.vault import VaultManager
+        from engramkit.memory.layers import MemoryStack
+        from engramkit.memory.token_budget import TokenBudget
+
+        cwd = os.getcwd()
+        vaults = VaultManager.list_vaults() or []
+        match = next((v for v in vaults if v.get("repo_path") == cwd), None)
+        if match is None:
+            print(json.dumps({}))
+            return
+
+        vault = VaultManager.get_vault(cwd)
+        try:
+            stack = MemoryStack(vault, TokenBudget(l1_max=1000))
+            result = stack.wake_up()
+            context = result.get("text", "").strip()
+        finally:
+            vault.close()
+
+        if not context:
+            print(json.dumps({}))
+            return
+
+        body = (
+            "EngramKit memory — identity + essential recent context loaded for this project.\n\n"
+            f"{context}\n\n"
+            "PROTOCOL:\n"
+            "- Before answering about past decisions, architecture, or code history, "
+            "call engramkit_search (or engramkit_recall / engramkit_kg_query).\n"
+            "- After important decisions or insights, call engramkit_save.\n"
+            "- Never guess about facts in memory — verify."
+        )
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": body,
+            }
+        }))
+    except Exception:
+        # Never let a failing hook break the session.
+        print(json.dumps({}))
+
+
 def main():
     if len(sys.argv) < 2:
         print(json.dumps({}))
         return
 
-    action = sys.argv[1]
+    action = sys.argv[1].replace("_", "-")
     if action == "stop":
         handle_stop()
     elif action == "precompact":
         handle_precompact()
+    elif action == "session-start":
+        handle_session_start()
     else:
         print(json.dumps({}))
 

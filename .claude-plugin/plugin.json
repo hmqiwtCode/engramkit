@@ -1,0 +1,27 @@
+{
+  "name": "engramkit",
+  "version": "0.1.2",
+  "description": "Long-term memory for Claude Code — hybrid search, git-aware ingestion, content-addressed chunks, and 12 MCP tools. Install once per project with `/plugin install engramkit` and Claude auto-loads memory on every session.",
+  "author": {
+    "name": "Quy Huynh",
+    "email": "huynhminhquy1999@gmail.com"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/hmqiwtCode/engramkit",
+  "keywords": [
+    "memory",
+    "ai",
+    "rag",
+    "mcp",
+    "chromadb",
+    "search",
+    "knowledge-graph",
+    "developer-tools"
+  ],
+  "mcpServers": {
+    "engramkit": {
+      "command": "engramkit-mcp"
+    }
+  },
+  "commands": []
+}

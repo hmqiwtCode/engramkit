@@ -30,7 +30,6 @@ dependencies = [
     "tiktoken>=0.5",
     "fastapi>=0.100",
     "uvicorn>=0.20",
-    "claude-agent-sdk>=0.1",
 ]
 
 [project.urls]
@@ -44,10 +43,9 @@ engramkit = "engramkit.cli:main"
 engramkit-mcp = "engramkit.mcp.server:run_stdio"
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "ruff"]
-api = ["fastapi>=0.100", "uvicorn>=0.20"]
+dev = ["pytest", "pytest-cov", "ruff", "httpx", "build", "twine"]
 chat = ["claude-agent-sdk>=0.1"]
-all = ["engramkit[api,chat]"]
+all = ["engramkit[chat]"]
 
 [tool.setuptools.packages.find]
 include = ["engramkit*"]
@@ -61,3 +59,17 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint]
+ignore = [
+    "E701",  # multiple statements on one line (colon) — allow `if x: y()` style
+    "E702",  # multiple statements on one line (semicolon) — allow `a; b` style
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = [
+    "ignore::DeprecationWarning:chromadb.*",
+    "ignore::DeprecationWarning:pydantic.*",
+]

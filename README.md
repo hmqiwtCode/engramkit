@@ -107,6 +107,69 @@ engramkit status
 
 ---
 
+## Claude Code Integration
+
+### Quick Setup
+
+```bash
+cd ~/your-project
+
+# 1. Mine your codebase
+engramkit mine .
+
+# 2. Install auto-save hooks
+engramkit hooks install -d .
+
+# 3. Register MCP server for your AI tool
+claude mcp add engramkit -- engramkit-mcp                      # Claude Code
+# codex mcp add engramkit -- python3 -m engramkit.mcp.server   # Codex (coming soon)
+```
+
+What each step does:
+- **Step 1** — indexes your code into a searchable vault
+- **Step 2** — installs git hooks (auto re-mine on commit/pull) + Claude Code hooks (auto-save conversations)
+- **Step 3** — gives your AI tool access to 12 EngramKit memory tools
+
+Now start Claude Code:
+
+```bash
+claude
+```
+
+Claude will:
+1. Call `engramkit_wake_up` on session start → loads identity + recent context (L0 + L1)
+2. Call `engramkit_search` before answering code questions → finds relevant chunks
+3. Auto-save important decisions/insights via the Stop hook
+4. Emergency-save everything before context compression
+
+### Available Tools (12)
+
+**Read tools:**
+| Tool | Description |
+|---|---|
+| `engramkit_status` | Vault overview: chunks, wings, rooms, generation |
+| `engramkit_search` | Hybrid search (semantic + BM25) across the vault |
+| `engramkit_wake_up` | Load L0 + L1 wake-up context for session start |
+| `engramkit_recall` | L2 on-demand recall filtered by wing/room |
+| `engramkit_kg_query` | Query knowledge graph for entity relationships |
+| `engramkit_kg_timeline` | Chronological timeline of knowledge graph facts |
+
+**Write tools:**
+| Tool | Description |
+|---|---|
+| `engramkit_save` | Save content to vault with auto content-hash dedup |
+| `engramkit_kg_add` | Add a fact: subject -> predicate -> object |
+| `engramkit_kg_invalidate` | Mark a knowledge graph fact as no longer valid |
+| `engramkit_diary_write` | Write a diary entry (agent's personal journal) |
+
+**Admin tools:**
+| Tool | Description |
+|---|---|
+| `engramkit_gc` | Run garbage collection on stale chunks |
+| `engramkit_config` | Get or set vault configuration |
+
+---
+
 ## CLI Reference
 
 ```
@@ -253,69 +316,6 @@ python benchmarks/convomem_bench.py --limit 50 --mode all
 # Mining & search performance
 python benchmarks/compare_mempalace.py /path/to/repo
 ```
-
----
-
-## Claude Code Integration
-
-### Quick Setup
-
-```bash
-cd ~/your-project
-
-# 1. Mine your codebase
-engramkit mine .
-
-# 2. Install auto-save hooks
-engramkit hooks install -d .
-
-# 3. Register MCP server for your AI tool
-claude mcp add engramkit -- engramkit-mcp                      # Claude Code
-# codex mcp add engramkit -- python3 -m engramkit.mcp.server   # Codex (coming soon)
-```
-
-What each step does:
-- **Step 1** — indexes your code into a searchable vault
-- **Step 2** — installs git hooks (auto re-mine on commit/pull) + Claude Code hooks (auto-save conversations)
-- **Step 3** — gives your AI tool access to 12 EngramKit memory tools
-
-Now start Claude Code:
-
-```bash
-claude
-```
-
-Claude will:
-1. Call `engramkit_wake_up` on session start → loads identity + recent context (L0 + L1)
-2. Call `engramkit_search` before answering code questions → finds relevant chunks
-3. Auto-save important decisions/insights via the Stop hook
-4. Emergency-save everything before context compression
-
-### Available Tools (12)
-
-**Read tools:**
-| Tool | Description |
-|---|---|
-| `engramkit_status` | Vault overview: chunks, wings, rooms, generation |
-| `engramkit_search` | Hybrid search (semantic + BM25) across the vault |
-| `engramkit_wake_up` | Load L0 + L1 wake-up context for session start |
-| `engramkit_recall` | L2 on-demand recall filtered by wing/room |
-| `engramkit_kg_query` | Query knowledge graph for entity relationships |
-| `engramkit_kg_timeline` | Chronological timeline of knowledge graph facts |
-
-**Write tools:**
-| Tool | Description |
-|---|---|
-| `engramkit_save` | Save content to vault with auto content-hash dedup |
-| `engramkit_kg_add` | Add a fact: subject -> predicate -> object |
-| `engramkit_kg_invalidate` | Mark a knowledge graph fact as no longer valid |
-| `engramkit_diary_write` | Write a diary entry (agent's personal journal) |
-
-**Admin tools:**
-| Tool | Description |
-|---|---|
-| `engramkit_gc` | Run garbage collection on stale chunks |
-| `engramkit_config` | Get or set vault configuration |
 
 ---
 

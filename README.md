@@ -149,16 +149,36 @@ pip install --upgrade engramkit          # if you installed with pip
 
 Pin to a specific version with `engramkit=={version}` (e.g. `engramkit==0.1.4`). See [releases](https://github.com/hmqiwtCode/engramkit/releases) for what shipped in each version.
 
-### Verify the SessionStart hook is injecting context
+### Verify it's working
 
-One command from a mined project directory:
+**Shell check** (runs the hook directly and tells you what Claude will see):
 
 ```bash
 echo '{}' | engramkit-hook session-start | python3 -c "import json,sys; ctx=json.load(sys.stdin).get('hookSpecificOutput',{}).get('additionalContext',''); print(f'✓ injected {len(ctx)} chars') if ctx else print('✗ empty — no vault for this dir, or upgrade needed')"
 ```
 
-- `✓ injected <N> chars` — working. Claude will receive this same text at every session start.
+- `✓ injected <N> chars` — the hook is producing context. Claude will receive the same text at every session start.
 - `✗ empty` — either the current directory doesn't have a mined vault (`engramkit mine .`), or you're on a version older than 0.1.4 (`pip install --upgrade engramkit`).
+
+**In-Claude check** (paste this into a fresh `claude` session inside a mined project):
+
+```text
+Run this full diagnostic in order and report each result:
+
+1. Did you receive an `additionalContext` block labeled "EngramKit memory" at session start?
+   If yes, quote the first 200 characters verbatim. If no, say "no injection".
+2. Call the MCP tool `engramkit_status` and show the exact JSON. If it errors, show the error.
+3. Call `engramkit_search` with query "decisions" and n_results: 3. Report how many chunks came back.
+4. Based on 1-3, is engramkit fully working, partially working (which part), or not working?
+```
+
+Expected results:
+- **Q1** — a real quote from your vault → SessionStart injection fired ✓
+- **Q2** — JSON containing `total_drawers`, `wings`, and a `protocol` field → MCP + protocol wired ✓
+- **Q3** — `3` chunks → hybrid search path works end-to-end ✓
+- **Q4** — "fully working" → you're done.
+
+If Q1 fails but Q2/Q3 pass, the MCP server is fine but the `SessionStart` hook isn't firing (usually a stale plugin install — `/plugin uninstall engramkit@engramkit` then `/plugin install engramkit@engramkit` forces Claude Code to re-read `hooks.json`).
 
 ### Prefer manual wiring?
 

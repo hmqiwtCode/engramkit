@@ -109,47 +109,56 @@ engramkit status
 
 ## Claude Code Integration
 
-### Option A — Claude Code plugin (recommended)
+Three commands — two in the terminal, two in Claude Code — then memory runs itself.
 
-One-time setup to tell Claude Code where to find the plugin, then install it:
+### 1. Install the Python package (once per machine)
 
 ```bash
-# 1. Index your codebase
-cd ~/your-project
-engramkit mine .
+pipx install engramkit
 ```
 
-Inside Claude Code:
+This provides the `engramkit` CLI and the `engramkit-mcp` binary the plugin will call.
+
+### 2. Install the Claude Code plugin (once per user)
+
+Inside any `claude` session, type:
 
 ```text
-/plugin marketplace add hmqiwtCode/engramkit       # once per user; registers the repo
-/plugin install engramkit@engramkit                # installs MCP + SessionStart/Stop/PreCompact hooks
+/plugin marketplace add hmqiwtCode/engramkit
+/plugin install engramkit@engramkit
 ```
 
-After that, every `claude` session in any project auto-loads the EngramKit memory on start — no `settings.json` editing, no per-project wiring.
+This registers the MCP server **and** the `SessionStart` / `Stop` / `PreCompact` hooks. No `settings.json` to hand-edit.
 
-### Option B — manual wiring
+### 3. Index a project (once per project)
 
 ```bash
 cd ~/your-project
-
-# 1. Mine your codebase
 engramkit mine .
-
-# 2. Install auto-save hooks (git hooks + Claude Code hooks)
-engramkit hooks install -d .
-
-# 3. Register MCP server for your AI tool
-claude mcp add engramkit -- engramkit-mcp                      # Claude Code
-# codex mcp add engramkit -- python3 -m engramkit.mcp.server   # Codex (coming soon)
+claude          # memory auto-loads on session start
 ```
 
-### What Claude does with it
+From here, every Claude session in that project is primed with the project's memory before you type a single word.
 
-1. **On session start** — the `SessionStart` hook runs `engramkit wake-up` and injects identity + recent-context (~170 tokens) directly into Claude's context. No tool call needed.
-2. **Before answering** about past decisions / architecture / code history — the protocol embedded in every `engramkit_status` and `engramkit_wake_up` response reminds Claude to call `engramkit_search` first rather than guess.
-3. **During the session** — the `Stop` hook watches message count + content importance; when a decision, architecture change, or bug fix is detected it blocks the response and tells Claude to `engramkit_save` before continuing.
-4. **Before context compression** — the `PreCompact` hook forces a comprehensive save so nothing important is lost.
+### Prefer manual wiring?
+
+If you don't want the plugin and would rather wire things up yourself:
+
+```bash
+engramkit hooks install -d .                         # installs git hooks + Claude Code hooks
+claude mcp add engramkit -- engramkit-mcp            # registers the MCP server
+```
+
+### What runs when
+
+| Moment | What fires | What it does |
+|---|---|---|
+| You open `claude` in a mined project | `SessionStart` hook → `engramkit wake-up` | Reads identity + L1 essential context (~170 tokens) and injects it directly into Claude's context. No tool call needed — Claude starts the session already knowing the project. |
+| You ask Claude a code or history question | Claude calls `engramkit_search` (hinted by the protocol baked into every `engramkit_wake_up` / `engramkit_status` response) | Hybrid semantic + BM25 search across the vault, returns ranked chunks. |
+| A meaningful decision, fix, or insight is discussed | `Stop` hook importance-scores the transcript | When the score crosses threshold it blocks the stop event and tells Claude to `engramkit_save` before continuing — the conversation picks up immediately after. |
+| Claude is about to compress context | `PreCompact` hook | Blocks and tells Claude to save *everything* important now, before detail is lost. |
+
+You never have to say "check engramkit" — the protocol + hooks do that for you.
 
 ### Available Tools (12)
 

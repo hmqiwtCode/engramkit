@@ -1,5 +1,18 @@
 # EngramKit Changelog
 
+## v0.1.3 -- 2026-04-13
+
+### Added
+
+- **`engramkit mine --ignore`** — skip extra folders per invocation. Accepts gitignore-style patterns via `pathspec`: `docs` (any depth), `/docs` (root only), `lib/docs` (anchored), `lib/**` (recursive), `*.log`, `!keep.md` (negation). Merges with the project's `.gitignore` into a single PathSpec.
+- **Claude Code plugin** — `/plugin marketplace add hmqiwtCode/engramkit` then `/plugin install engramkit@engramkit` wires the MCP server plus `SessionStart`, `Stop`, and `PreCompact` hooks in one command. No `settings.json` editing.
+- **SessionStart hook** — runs `engramkit wake-up` on every Claude Code session and injects identity + L1 essential memory (~170 tokens) directly into context. Claude starts each session already primed with project memory — no tool call required.
+- **Protocol embedded in `engramkit_wake_up`** — the tool response now includes imperative instructions (search before guessing, save after decisions) so every call re-teaches Claude the memory-use rules.
+
+### Changed
+
+- **`version` single source of truth** — `scripts/sync-version.py` rewrites `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` from `pyproject.toml`. CI + release workflow guard against drift.
+
 ## v0.1.2 -- 2026-04-13
 
 ### Fixes

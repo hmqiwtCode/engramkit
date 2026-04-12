@@ -252,6 +252,12 @@ def cmd_dashboard(args):
   └─────────────────────────────────────────┘
 """)
 
+    try:
+        import claude_agent_sdk  # noqa: F401
+    except ImportError:
+        print("  \033[33mNote:\033[0m RAG chat is disabled — optional dependency not installed.")
+        print("        Enable with: \033[36mpipx install 'engramkit[chat]' --force\033[0m\n")
+
     port = _find_free_port(8000, 8100)
     os.environ["UVICORN_PORT"] = str(port)
     os.environ["ENGRAMKIT_SERVE_DASHBOARD"] = "1"

@@ -82,8 +82,11 @@ Each repository gets its own vault, identified by a deterministic hash of the re
 ## Quick Start
 
 ```bash
-# Install
+# Install (core: CLI, MCP, REST API, dashboard, hybrid search)
 pipx install engramkit
+
+# Optional — enables the RAG chat feature inside the dashboard
+pipx install 'engramkit[chat]' --force   # requires Python 3.10+
 
 # Mine a project
 engramkit mine ~/my-project
@@ -91,9 +94,16 @@ engramkit mine ~/my-project
 # Search it
 engramkit search "how does auth work"
 
+# Open the web dashboard
+engramkit dashboard
+
 # Check status
 engramkit status
 ```
+
+> **What's in each install?**
+> - `engramkit` — everything except RAG chat: CLI, MCP server, REST API, web dashboard, hybrid search, knowledge graph, GC.
+> - `engramkit[chat]` — adds the [Claude Agent SDK](https://pypi.org/project/claude-agent-sdk/) so the dashboard's chat panel can answer questions over your vault. Needs Python ≥ 3.10.
 
 ---
 

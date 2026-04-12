@@ -1,5 +1,16 @@
 # EngramKit Changelog
 
+## v0.1.2 -- 2026-04-13
+
+### Fixes
+
+- PyPI project URLs now point at the real GitHub repo (previously placeholder `user/engramkit`).
+- README images render on PyPI — switched from repo-relative paths to absolute `raw.githubusercontent.com` URLs so the logo, architecture diagram, and screenshots show up on the project page.
+
+## v0.1.1 -- 2026-04-12
+
+- First public release on PyPI via GitHub Actions trusted publishing.
+
 ## v0.1.0 -- 2026-04-09
 
 Initial release.

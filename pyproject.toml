@@ -1,12 +1,12 @@
 [project]
 name = "engramkit"
-version = "0.1.1"
+version = "0.1.2"
 description = "AI memory system with hybrid search, git-aware ingestion, and garbage collection"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
 authors = [
-    {name = "EngramKit Contributors"},
+    {name = "Quy Huynh", email = "huynhminhquy1999@gmail.com"},
 ]
 keywords = [
     "ai", "memory", "search", "rag", "mcp", "chromadb", "embeddings",
@@ -33,10 +33,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/user/engramkit"
-Repository = "https://github.com/user/engramkit"
-Issues = "https://github.com/user/engramkit/issues"
-Changelog = "https://github.com/user/engramkit/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/hmqiwtCode/engramkit"
+Repository = "https://github.com/hmqiwtCode/engramkit"
+Issues = "https://github.com/hmqiwtCode/engramkit/issues"
+Changelog = "https://github.com/hmqiwtCode/engramkit/blob/main/CHANGELOG.md"
 
 [project.scripts]
 engramkit = "engramkit.cli:main"

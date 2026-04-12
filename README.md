@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/engramkit_logo.svg" alt="EngramKit" width="200" />
+  <img src="https://raw.githubusercontent.com/hmqiwtCode/engramkit/main/assets/engramkit_logo.svg" alt="EngramKit" width="200" />
 </p>
 
 <h1 align="center">EngramKit</h1>
@@ -62,7 +62,7 @@ EngramKit preserves MemPalace's core ideas. What it changes is the engineering u
 ## Architecture
 
 <p align="center">
-  <img src="assets/engramkit_architecture_v2.svg" alt="EngramKit Architecture" width="100%" />
+  <img src="https://raw.githubusercontent.com/hmqiwtCode/engramkit/main/assets/engramkit_architecture_v2.svg" alt="EngramKit Architecture" width="100%" />
 </p>
 
 ```
@@ -151,13 +151,13 @@ Install git hooks (post-commit, post-merge) for automatic mining on commit and p
 The Next.js dashboard provides a web UI for interacting with EngramKit:
 
 <p align="center">
-  <img src="assets/dashboard.png" alt="EngramKit Dashboard" width="100%" />
+  <img src="https://raw.githubusercontent.com/hmqiwtCode/engramkit/main/assets/dashboard.png" alt="EngramKit Dashboard" width="100%" />
   <br />
   <em>Dashboard — vault overview with stats, chunk counts, and wing/room breakdown</em>
 </p>
 
 <p align="center">
-  <img src="assets/chat.png" alt="EngramKit Chat" width="100%" />
+  <img src="https://raw.githubusercontent.com/hmqiwtCode/engramkit/main/assets/chat.png" alt="EngramKit Chat" width="100%" />
   <br />
   <em>RAG Chat — search your codebase and ask questions with cited sources, token usage, and tool tracking</em>
 </p>

@@ -140,6 +140,26 @@ claude          # memory auto-loads on session start
 
 From here, every Claude session in that project is primed with the project's memory before you type a single word.
 
+### Upgrading
+
+```bash
+pipx upgrade engramkit                   # if you installed with pipx
+pip install --upgrade engramkit          # if you installed with pip
+```
+
+Pin to a specific version with `engramkit=={version}` (e.g. `engramkit==0.1.4`). See [releases](https://github.com/hmqiwtCode/engramkit/releases) for what shipped in each version.
+
+### Verify the SessionStart hook is injecting context
+
+One command from a mined project directory:
+
+```bash
+echo '{}' | engramkit-hook session-start | python3 -c "import json,sys; ctx=json.load(sys.stdin).get('hookSpecificOutput',{}).get('additionalContext',''); print(f'✓ injected {len(ctx)} chars') if ctx else print('✗ empty — no vault for this dir, or upgrade needed')"
+```
+
+- `✓ injected <N> chars` — working. Claude will receive this same text at every session start.
+- `✗ empty` — either the current directory doesn't have a mined vault (`engramkit mine .`), or you're on a version older than 0.1.4 (`pip install --upgrade engramkit`).
+
 ### Prefer manual wiring?
 
 If you don't want the plugin and would rather wire things up yourself:

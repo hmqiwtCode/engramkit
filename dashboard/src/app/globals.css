@@ -1,0 +1,181 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+  --color-background: #0a0a0a;
+  --color-foreground: #f5f5f5;
+  --color-surface: #111111;
+  --color-border: #1e1e1e;
+  --color-accent: #3b82f6;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ── Base ── */
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Global transitions ── */
+
+*, *::before, *::after {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Scrollbar ── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #404040;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #262626 transparent;
+}
+
+/* ── Focus rings ── */
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #3b82f6;
+  border-radius: 6px;
+}
+
+/* ── Selection ── */
+
+::selection {
+  background: rgba(59, 130, 246, 0.25);
+  color: #f5f5f5;
+}
+
+/* ── Table styles ── */
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #737373;
+  border-bottom: 1px solid #1e1e1e;
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #d4d4d4;
+  border-bottom: 1px solid #141414;
+  vertical-align: middle;
+}
+
+tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Input styles ── */
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea {
+  background: #111111;
+  border: 1px solid #262626;
+  border-radius: 8px;
+  color: #f5f5f5;
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #525252;
+}
+
+/* ── Button base ── */
+
+button {
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Code blocks ── */
+
+pre, code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+pre {
+  background: #111111;
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+code:not(pre code) {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.875em;
+}
+
+/* ── Links ── */
+
+a {
+  text-decoration: none;
+}
+
+/* ── Page transitions ── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

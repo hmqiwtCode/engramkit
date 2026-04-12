@@ -1,0 +1,63 @@
+[project]
+name = "engramkit"
+version = "0.1.1"
+description = "AI memory system with hybrid search, git-aware ingestion, and garbage collection"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    {name = "EngramKit Contributors"},
+]
+keywords = [
+    "ai", "memory", "search", "rag", "mcp", "chromadb", "embeddings",
+    "knowledge-graph", "cli", "developer-tools",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "chromadb>=0.5.0,<0.7",
+    "pyyaml>=6.0",
+    "tiktoken>=0.5",
+    "fastapi>=0.100",
+    "uvicorn>=0.20",
+    "claude-agent-sdk>=0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/user/engramkit"
+Repository = "https://github.com/user/engramkit"
+Issues = "https://github.com/user/engramkit/issues"
+Changelog = "https://github.com/user/engramkit/blob/main/CHANGELOG.md"
+
+[project.scripts]
+engramkit = "engramkit.cli:main"
+engramkit-mcp = "engramkit.mcp.server:run_stdio"
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff"]
+api = ["fastapi>=0.100", "uvicorn>=0.20"]
+chat = ["claude-agent-sdk>=0.1"]
+all = ["engramkit[api,chat]"]
+
+[tool.setuptools.packages.find]
+include = ["engramkit*"]
+
+[tool.setuptools.package-data]
+engramkit = ["dashboard_static/**/*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100

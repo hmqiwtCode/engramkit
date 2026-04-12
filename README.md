@@ -119,18 +119,20 @@ engramkit mine <directory> [--wing NAME] [--room NAME] [--full] [--dry-run] [--i
 ```
 Mine a project into its vault. Uses git diff for incremental mining when available. `--full` forces a complete rescan. `--dry-run` previews without storing.
 
-`--ignore` adds extra folders to the skip set on top of the built-in list and `.gitignore`. **Patterns are anchored at the project root** (fnmatch semantics). Repeat the flag or comma-separate:
+`--ignore` takes **gitignore-style patterns** (the same syntax you already use in `.gitignore`). User-supplied patterns and the project's `.gitignore` are merged into one spec with identical precedence rules, including `!` negation. Repeat the flag or comma-separate:
 
 | Pattern | Meaning |
 |---|---|
-| `--ignore docs` | the `docs/` folder **at the project root only** (not `lib/docs/`) |
-| `--ignore lib/docs` | the `docs/` folder directly under `lib/`, specifically |
-| `--ignore "lib/docs/*"` | same as above — trailing `/`, `/*`, `/**` all normalize to the folder itself |
-| `--ignore "lib/*"` | **everything under `lib/`** — direct and nested, files and folders |
-| `--ignore "**/docs"` | any `docs/` folder **nested** under some other folder (escape hatch for multi-depth matches) |
+| `--ignore docs` | any folder named `docs`, at any depth (root or nested) |
+| `--ignore /docs` | anchored to the project root only |
+| `--ignore docs/` | trailing slash restricts the match to directories |
+| `--ignore lib/docs` | a slash in the middle anchors the pattern — only that exact path |
+| `--ignore "lib/**"` | everything under `lib/`, recursively |
+| `--ignore "*.log"` | any `.log` file, at any depth |
+| `--ignore "!keep.md"` | negation — re-include something matched by an earlier pattern |
 | `--ignore docs,examples` | shorthand for `--ignore docs --ignore examples` |
 
-For "match a name at any depth" use both patterns: `--ignore docs --ignore "**/docs"`.
+Pattern semantics are from Python's [pathspec](https://pypi.org/project/pathspec/) `gitwildmatch` matcher, which is what tools like pip, twine, black, and setuptools-scm use.
 
 ```
 engramkit search <query> [-d DIRECTORY] [--wing NAME] [--room NAME] [-n COUNT]

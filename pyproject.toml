@@ -30,6 +30,7 @@ dependencies = [
     "tiktoken>=0.5",
     "fastapi>=0.100",
     "uvicorn>=0.20",
+    "pathspec>=0.12",
 ]
 
 [project.urls]

@@ -1,8 +1,9 @@
 """Ingestion pipeline — scan, chunk, diff, store."""
 
 import os
-import fnmatch
 from pathlib import Path
+
+import pathspec
 
 from engramkit.config import READABLE_EXTENSIONS, SKIP_DIRS, SKIP_FILENAMES
 from engramkit.ingest.chunker import smart_chunk, file_hash
@@ -10,34 +11,37 @@ from engramkit.ingest.secret_scanner import is_secret_file, contains_secret
 from engramkit.storage.vault import Vault
 
 
-def _parse_extra_ignores(extra_ignores: list[str]) -> list[str]:
-    """Normalize user-supplied ignores to anchored project-relative patterns.
+def _build_ignore_spec(
+    project_path: Path,
+    respect_gitignore: bool,
+    extra_ignores: list[str] | None,
+) -> pathspec.PathSpec | None:
+    """Compose .gitignore + user-supplied patterns into a single PathSpec.
 
-    All patterns are matched via fnmatch against each candidate's POSIX
-    path, anchored at the project root. That means ``docs`` matches only
-    the top-level ``docs/`` folder — it does NOT match ``lib/docs/``.
-    Use ``**/docs`` (or a glob) if you want nested matches too.
-
-    Trailing ``/``, ``/*``, and ``/**`` are stripped so ``lib/docs``,
-    ``lib/docs/``, ``lib/docs/*``, and ``lib/docs/**`` all mean the same
-    thing: skip the ``lib/docs`` folder and everything inside it.
+    Uses ``gitwildmatch`` — the gitignore syntax everyone already knows:
+    bare names match at any depth, a leading ``/`` anchors to root, a
+    trailing ``/`` restricts to directories, ``**`` is recursive, and
+    ``!`` negates. Returns ``None`` when there is nothing to match so the
+    caller can skip per-path checks entirely.
     """
-    patterns: list[str] = []
+    lines: list[str] = []
+
+    if respect_gitignore:
+        gitignore = project_path / ".gitignore"
+        if gitignore.exists():
+            try:
+                lines.extend(gitignore.read_text(errors="replace").splitlines())
+            except OSError:
+                pass
+
     for raw in extra_ignores or []:
         pat = (raw or "").strip()
-        if not pat:
-            continue
-        norm = pat.rstrip("/")
-        for suffix in ("/**", "/*"):
-            if norm.endswith(suffix):
-                norm = norm[: -len(suffix)]
-        if norm:
-            patterns.append(norm)
-    return patterns
+        if pat:
+            lines.append(pat)
 
-
-def _matches_ignore(rel_path: str, patterns: list[str]) -> bool:
-    return bool(patterns) and any(fnmatch.fnmatch(rel_path, p) for p in patterns)
+    if not lines:
+        return None
+    return pathspec.PathSpec.from_lines("gitwildmatch", lines)
 
 
 def scan_files(
@@ -47,19 +51,13 @@ def scan_files(
 ) -> list[Path]:
     """Walk directory tree and return list of mineable files.
 
-    ``extra_ignores`` accepts project-relative path patterns (see
-    :func:`_parse_extra_ignores`). Patterns match both directories
-    (pruning the walk) and individual files.
+    ``extra_ignores`` accepts gitignore-style patterns. They are merged
+    with the project's ``.gitignore`` (unless ``respect_gitignore`` is
+    False) so user-supplied patterns behave identically to committed
+    ones — same syntax, same precedence rules, including negation.
     """
     project_path = Path(project_dir).expanduser().resolve()
-    gitignore_patterns = []
-
-    if respect_gitignore:
-        gitignore_path = project_path / ".gitignore"
-        if gitignore_path.exists():
-            gitignore_patterns = _load_gitignore(gitignore_path)
-
-    ignore_patterns = _parse_extra_ignores(extra_ignores or [])
+    spec = _build_ignore_spec(project_path, respect_gitignore, extra_ignores)
 
     files = []
     for root, dirs, filenames in os.walk(project_path):
@@ -75,7 +73,9 @@ def scan_files(
             if d in SKIP_DIRS:
                 continue
             rel_child = f"{root_rel}/{d}" if root_rel else d
-            if _matches_ignore(rel_child, ignore_patterns):
+            # Match with a trailing slash so directory-only patterns (``foo/``)
+            # and ``**`` expansions resolve correctly.
+            if spec is not None and spec.match_file(rel_child + "/"):
                 continue
             kept.append(d)
         dirs[:] = kept
@@ -84,66 +84,23 @@ def scan_files(
         for filename in filenames:
             filepath = root_path / filename
 
-            # Skip by filename
             if filename in SKIP_FILENAMES:
                 continue
-
-            # Skip by extension
             if filepath.suffix.lower() not in READABLE_EXTENSIONS:
                 continue
-
-            # Skip secret files
             if is_secret_file(str(filepath)):
                 continue
 
-            # Skip against user-supplied ignore patterns (covers files under
-            # e.g. `lib/*` so the flag matches folders *and* their contents).
             try:
                 rel_file = filepath.relative_to(project_path).as_posix()
             except ValueError:
                 rel_file = filename
-            if _matches_ignore(rel_file, ignore_patterns):
-                continue
-
-            # Skip gitignored files
-            if gitignore_patterns and _is_gitignored(rel_file, gitignore_patterns):
+            if spec is not None and spec.match_file(rel_file):
                 continue
 
             files.append(filepath)
 
     return files
-
-
-def _load_gitignore(gitignore_path: Path) -> list[str]:
-    """Load patterns from .gitignore."""
-    patterns = []
-    try:
-        for line in gitignore_path.read_text(errors="replace").splitlines():
-            line = line.strip()
-            if line and not line.startswith("#"):
-                patterns.append(line)
-    except OSError:
-        pass
-    return patterns
-
-
-def _is_gitignored(relative_path: str, patterns: list[str]) -> bool:
-    """Simple gitignore check — matches filename or path against patterns."""
-    parts = relative_path.split("/")
-    filename = parts[-1]
-    for pattern in patterns:
-        pattern = pattern.rstrip("/")
-        # Match against filename
-        if fnmatch.fnmatch(filename, pattern):
-            return True
-        # Match against full relative path
-        if fnmatch.fnmatch(relative_path, pattern):
-            return True
-        # Match against any path component
-        for part in parts:
-            if fnmatch.fnmatch(part, pattern):
-                return True
-    return False
 
 
 def process_file(filepath: Path, project_path: Path, config: dict) -> dict:

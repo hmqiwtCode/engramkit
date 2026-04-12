@@ -49,6 +49,17 @@ Template for the new section (place it directly after `# EngramKit Changelog`):
 
 Edit the `version = "..."` line to the new version. Leave everything else alone.
 
+### 3b. Sync the plugin manifests
+
+```bash
+python scripts/sync-version.py
+```
+
+`pyproject.toml` is the single source of truth. The script rewrites the
+`version` field inside `.claude-plugin/plugin.json` and
+`.claude-plugin/marketplace.json` to match. CI fails if these drift, so
+never skip this step.
+
 ### 4. Show the diff, then commit
 
 Run `git diff` and show the user. Proceed only on explicit confirmation (treat anything short of "yes / do it / lgtm / ship it" as a *no*).
@@ -56,7 +67,7 @@ Run `git diff` and show the user. Proceed only on explicit confirmation (treat a
 On confirmation:
 
 ```bash
-git add pyproject.toml CHANGELOG.md
+git add pyproject.toml CHANGELOG.md .claude-plugin/plugin.json .claude-plugin/marketplace.json
 git commit -m "chore: release <VERSION>"
 git push
 ```

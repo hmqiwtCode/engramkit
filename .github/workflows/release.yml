@@ -36,6 +36,9 @@ jobs:
           print(f"Version OK: {pkg}")
           PY
 
+      - name: Guard — plugin manifests must match pyproject version
+        run: python scripts/sync-version.py --check
+
       - name: Install build tools
         run: python -m pip install --upgrade pip build twine
 

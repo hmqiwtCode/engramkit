@@ -1,5 +1,15 @@
 # EngramKit Changelog
 
+## v0.1.4 -- 2026-04-13
+
+### Fixed
+
+- **Claude Code hooks now fire reliably across Python installs.** Previously the plugin's hooks called `python3 -m engramkit.hooks.claude_hook_handler`, which resolved to whatever `python3` was first on PATH — often a Homebrew/system Python that didn't have engramkit installed, causing the `SessionStart` hook to silently do nothing. Replaced with a new `engramkit-hook` console-script entry point that ships in the same bin/ directory as `engramkit-mcp`, so it always runs with the correct interpreter.
+
+### Changed
+
+- **Plugin hooks no longer ship bash wrappers.** `hooks/engramkit-*.sh` are gone; `hooks/hooks.json` now invokes `engramkit-hook <event>` directly. Simpler structure, one less indirection.
+
 ## v0.1.3 -- 2026-04-13
 
 ### Added

@@ -10,6 +10,35 @@ from engramkit.ingest.secret_scanner import is_secret_file, contains_secret
 from engramkit.storage.vault import Vault
 
 
+def _parse_extra_ignores(extra_ignores: list[str]) -> tuple[set[str], list[str]]:
+    """Split user-supplied ignores into bare names and path patterns.
+
+    - Values with no ``/`` are treated as directory NAMES and matched at any
+      depth (equivalent to extending the built-in SKIP_DIRS).
+    - Values with a ``/`` are treated as project-relative directory paths
+      and matched by fnmatch against each candidate's relative path.
+      Trailing ``/``, ``/*``, or ``/**`` are normalized away so that
+      ``lib/docs``, ``lib/docs/``, ``lib/docs/*``, and ``lib/docs/**`` all
+      mean the same thing: skip the ``lib/docs`` directory.
+    """
+    names: set[str] = set()
+    paths: list[str] = []
+    for raw in extra_ignores or []:
+        pat = (raw or "").strip()
+        if not pat:
+            continue
+        if "/" in pat:
+            norm = pat.rstrip("/")
+            for suffix in ("/**", "/*"):
+                if norm.endswith(suffix):
+                    norm = norm[: -len(suffix)]
+            if norm:
+                paths.append(norm)
+        else:
+            names.add(pat)
+    return names, paths
+
+
 def scan_files(
     project_dir: str,
     respect_gitignore: bool = True,
@@ -17,9 +46,9 @@ def scan_files(
 ) -> list[Path]:
     """Walk directory tree and return list of mineable files.
 
-    ``extra_ignores`` adds directory names to the built-in SKIP_DIRS set for
-    this scan only — use it to exclude project-specific folders without
-    editing .gitignore. Matching is by directory name at any depth.
+    ``extra_ignores`` accepts either bare directory names (matched at any
+    depth) or project-relative path patterns like ``lib/docs`` or
+    ``lib/*`` (matched against each candidate's relative path).
     """
     project_path = Path(project_dir).expanduser().resolve()
     gitignore_patterns = []
@@ -29,12 +58,29 @@ def scan_files(
         if gitignore_path.exists():
             gitignore_patterns = _load_gitignore(gitignore_path)
 
-    skip_dirs = SKIP_DIRS | {d for d in (extra_ignores or []) if d}
+    name_ignores, path_ignores = _parse_extra_ignores(extra_ignores or [])
+    skip_dirs = SKIP_DIRS | name_ignores
 
     files = []
     for root, dirs, filenames in os.walk(project_path):
-        # Filter directories in-place
-        dirs[:] = [d for d in dirs if d not in skip_dirs]
+        # Filter directories in-place: bare-name match OR path-pattern match.
+        try:
+            root_rel = Path(root).relative_to(project_path).as_posix()
+        except ValueError:
+            root_rel = ""
+        if root_rel == ".":
+            root_rel = ""
+
+        kept = []
+        for d in dirs:
+            if d in skip_dirs:
+                continue
+            if path_ignores:
+                rel_child = f"{root_rel}/{d}" if root_rel else d
+                if any(fnmatch.fnmatch(rel_child, p) for p in path_ignores):
+                    continue
+            kept.append(d)
+        dirs[:] = kept
 
         root_path = Path(root)
         for filename in filenames:

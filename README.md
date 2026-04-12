@@ -115,9 +115,19 @@ engramkit init <directory> [--wing NAME]
 Initialize a vault for a repository. Sets up SQLite schema, ChromaDB collection, and stores the wing name.
 
 ```
-engramkit mine <directory> [--wing NAME] [--room NAME] [--full] [--dry-run] [--ignore NAME ...]
+engramkit mine <directory> [--wing NAME] [--room NAME] [--full] [--dry-run] [--ignore PATTERN ...]
 ```
-Mine a project into its vault. Uses git diff for incremental mining when available. `--full` forces a complete rescan. `--dry-run` previews without storing. `--ignore` adds directory names to the skip set on top of the built-in list and `.gitignore` — repeat the flag or comma-separate names (e.g. `--ignore docs --ignore examples` or `--ignore docs,examples`).
+Mine a project into its vault. Uses git diff for incremental mining when available. `--full` forces a complete rescan. `--dry-run` previews without storing.
+
+`--ignore` adds extra folders to the skip set on top of the built-in list and `.gitignore`. Repeat the flag or comma-separate:
+
+| Pattern | Meaning |
+|---|---|
+| `--ignore docs` | any folder named `docs` at any depth |
+| `--ignore lib/docs` | only the `docs` folder directly under `lib/`, not other `docs/` folders |
+| `--ignore "lib/docs/*"` | same as above — trailing `/`, `/*`, `/**` normalize to the folder itself |
+| `--ignore "lib/*"` | every direct child folder of `lib/` |
+| `--ignore docs,examples` | shorthand for `--ignore docs --ignore examples` |
 
 ```
 engramkit search <query> [-d DIRECTORY] [--wing NAME] [--room NAME] [-n COUNT]

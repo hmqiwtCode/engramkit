@@ -111,6 +111,58 @@ class TestScanFiles:
         assert "a.md" not in names
         assert "b.py" not in names
 
+    def test_extra_ignores_specific_path(self, sample_project):
+        """A path with '/' should only skip that specific path, not all dirs of the same name."""
+        (sample_project / "docs").mkdir()
+        (sample_project / "docs" / "root_doc.md").write_text("# Root\n" * 20)
+        nested_docs = sample_project / "lib" / "docs"
+        nested_docs.mkdir()
+        (nested_docs / "lib_doc.md").write_text("# Lib\n" * 20)
+
+        files = scan_files(str(sample_project), extra_ignores=["lib/docs"])
+        names = {f.name for f in files}
+        assert "lib_doc.md" not in names  # nested path skipped
+        assert "root_doc.md" in names     # same-name folder at root preserved
+
+    def test_extra_ignores_trailing_glob_normalizes(self, sample_project):
+        """'lib/docs', 'lib/docs/', 'lib/docs/*', and 'lib/docs/**' all mean the same."""
+        nested = sample_project / "lib" / "docs"
+        nested.mkdir()
+        (nested / "api.md").write_text("# API\n" * 20)
+
+        for pat in ["lib/docs", "lib/docs/", "lib/docs/*", "lib/docs/**"]:
+            files = scan_files(str(sample_project), extra_ignores=[pat])
+            names = {f.name for f in files}
+            assert "api.md" not in names, f"pattern {pat!r} failed to skip lib/docs"
+
+    def test_extra_ignores_path_glob(self, sample_project):
+        """'lib/*' should skip every direct child directory of lib/."""
+        (sample_project / "lib" / "docs").mkdir()
+        (sample_project / "lib" / "docs" / "a.md").write_text("# A\n" * 20)
+        (sample_project / "lib" / "helpers").mkdir()
+        (sample_project / "lib" / "helpers" / "h.py").write_text("x = 1\n" * 20)
+
+        files = scan_files(str(sample_project), extra_ignores=["lib/*"])
+        names = {f.name for f in files}
+        assert "a.md" not in names
+        assert "h.py" not in names
+
+    def test_extra_ignores_mixed_name_and_path(self, sample_project):
+        """Bare-name and path-pattern ignores can coexist."""
+        (sample_project / "node_modules_manual").mkdir()
+        (sample_project / "node_modules_manual" / "x.py").write_text("y = 1\n" * 20)
+        nested = sample_project / "lib" / "docs"
+        nested.mkdir()
+        (nested / "api.md").write_text("# API\n" * 20)
+
+        files = scan_files(
+            str(sample_project),
+            extra_ignores=["node_modules_manual", "lib/docs"],
+        )
+        names = {f.name for f in files}
+        assert "x.py" not in names
+        assert "api.md" not in names
+
     def test_skip_filenames(self, sample_project):
         """Files in SKIP_FILENAMES should be excluded."""
         (sample_project / "package-lock.json").write_text("{}")

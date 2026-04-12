@@ -178,7 +178,17 @@ Expected results:
 - **Q3** — `3` chunks → hybrid search path works end-to-end ✓
 - **Q4** — "fully working" → you're done.
 
-If Q1 fails but Q2/Q3 pass, the MCP server is fine but the `SessionStart` hook isn't firing (usually a stale plugin install — `/plugin uninstall engramkit@engramkit` then `/plugin install engramkit@engramkit` forces Claude Code to re-read `hooks.json`).
+If Q1 fails but Q2/Q3 pass, the MCP server is fine but the `SessionStart` hook isn't firing. Usually a stale plugin install — refresh it with:
+
+```text
+/plugin marketplace update engramkit
+/plugin uninstall engramkit@engramkit
+/plugin install engramkit@engramkit
+```
+
+Then **fully quit and reopen Claude Code** (close the app, not just the session) so hooks re-register at startup. Re-run the in-Claude diagnostic.
+
+> 💡 **Workaround if SessionStart still won't fire.** Once per session, paste this to Claude: *"Use engramkit to search for anything relevant to this project before we start."* Claude will call `engramkit_search` via MCP, receive the `protocol` string in the response, and from that point treat engramkit as its memory for the rest of the session. The MCP path works even when the hook doesn't — it's a single-message fallback until the plugin install is refreshed.
 
 ### Prefer manual wiring?
 

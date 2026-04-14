@@ -1,5 +1,11 @@
 # EngramKit Changelog
 
+## v0.1.5 -- 2026-04-14
+
+### Added
+
+- **`engramkit -v` / `--version`** — print the installed version and exit. Resolves via `importlib.metadata`, so `pyproject.toml` is the single source of truth and `__version__` no longer drifts.
+
 ## v0.1.4 -- 2026-04-13
 
 ### Fixed

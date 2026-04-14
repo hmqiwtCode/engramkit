@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from engramkit import __version__
 from engramkit.config import ENGRAMKIT_HOME
 
 
@@ -294,6 +295,11 @@ def main():
     parser = argparse.ArgumentParser(
         prog="engramkit",
         description="AI memory system with hybrid search and git-aware ingestion",
+    )
+    parser.add_argument(
+        "-v", "--version",
+        action="version",
+        version=f"engramkit {__version__}",
     )
     sub = parser.add_subparsers(dest="command")
 

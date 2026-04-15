@@ -61,6 +61,19 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: pyproject.toml
+      # ── Future hardening: rebuild the bundled dashboard before
+      # ── `python -m build` so the CI wheel matches exactly what ships to
+      # ── PyPI via release.yml. Commented out for now to keep PR runs fast;
+      # ── uncomment when we want CI to exercise the full release wheel
+      # ── shape on every push.
+      # - uses: actions/setup-node@v4
+      #   with:
+      #     node-version: "20"
+      #     cache: npm
+      #     cache-dependency-path: dashboard/package-lock.json
+      # - run: npm ci
+      #   working-directory: dashboard
+      # - run: ./scripts/build-dashboard.sh
       - run: python -m pip install --upgrade pip build twine
       - run: python -m build
       - run: python -m twine check --strict dist/*
@@ -87,3 +100,15 @@ jobs:
         working-directory: dashboard
       - name: Verify static export
         run: test -f dashboard/out/index.html
+      # ── Future drift check: fail PRs that touch dashboard/ but didn't
+      # ── commit the rebuilt `engramkit/dashboard_static/`. Currently
+      # ── commented out — release.yml already rebuilds on tag, and we
+      # ── don't want to surprise existing PRs. Uncomment once contributors
+      # ── are routinely running `./scripts/build-dashboard.sh` before push.
+      # - name: Verify bundled dashboard matches source
+      #   run: |
+      #     ./scripts/build-dashboard.sh
+      #     if ! git diff --exit-status engramkit/dashboard_static/; then
+      #       echo "::error::engramkit/dashboard_static/ is stale relative to dashboard/ source. Run ./scripts/build-dashboard.sh and commit the diff." >&2
+      #       exit 1
+      #     fi

@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${sans.variable} ${mono.variable} h-full`}
+      suppressHydrationWarning
+    >
       <body className="h-full bg-[#0a0a0a] text-gray-100 font-sans antialiased">
         <div className="flex h-full">
           <Sidebar />

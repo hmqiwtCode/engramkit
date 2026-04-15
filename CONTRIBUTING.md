@@ -75,6 +75,18 @@ The dashboard expects the API server to be running at `http://localhost:8000`:
 python -m engramkit.api.server
 ```
 
+### Bundled dashboard for `pip install -e .`
+
+The Python package serves a pre-built dashboard from `engramkit/dashboard_static/` when `ENGRAMKIT_SERVE_DASHBOARD=1` is set. That directory is **gitignored** — CI rebuilds it from `dashboard/` source on every release run, so users who `pipx install engramkit` always get a fresh UI without us having to commit thousands of generated files.
+
+For local development with the bundled-dashboard mode, build it yourself once:
+
+```bash
+./scripts/build-dashboard.sh
+```
+
+Re-run after any change in `dashboard/` if you want the editable install to reflect it. (The `npm run dev` flow above is faster for active UI work — only use the build script when testing the bundled-serve mode.)
+
 ## Cutting a Release
 
 Releases are fully automated — push a tag and GitHub Actions publishes to PyPI

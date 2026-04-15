@@ -1,5 +1,15 @@
 # EngramKit Changelog
 
+## v0.2.3 -- 2026-04-15
+
+Pure infra release — no source code changes since v0.2.2. Validates the new CI pipeline by shipping a wheel produced through it end-to-end.
+
+### Changed
+
+- **`engramkit/dashboard_static/` is no longer committed to the repo.** The directory is now `.gitignore`'d; CI rebuilds it from `dashboard/` source on every push, and `release.yml` rebuilds it on every tag. Source-of-truth is `dashboard/` only — drift between source and bundled artifact is now mechanically impossible. The PyPI wheel still ships the dashboard exactly as before (CI builds it before `python -m build`, setuptools picks it up via `[tool.setuptools.package-data]`).
+- **CI verifies the wheel actually contains the dashboard.** The `build` job in `ci.yml` now inspects every produced wheel via `zipfile` and fails if `dashboard_static/index.html` is missing — catches packaging regressions on the same push that introduces them, instead of waiting for someone to install the wheel.
+- **CONTRIBUTING.md and release skill updated** to reflect the new flow. `pip install -e .` no longer ships a dashboard out of the box; contributors run `./scripts/build-dashboard.sh` once locally if they want to test the bundled-serve mode.
+
 ## v0.2.2 -- 2026-04-15
 
 Republishes v0.2.1 with the bundled dashboard rebuilt. v0.2.1 to PyPI shipped with a stale `engramkit/dashboard_static/` — the wheel had the new agentic backend but the old chat UI, because the release workflow did not run the dashboard build script. PyPI versions are immutable, so v0.2.2 is the corrected artifact. Source code unchanged versus v0.2.1; rebuild + workflow hardening only.

@@ -1,6 +1,6 @@
 [project]
 name = "engramkit"
-version = "0.1.5"
+version = "0.2.1"
 description = "AI memory system with hybrid search, git-aware ingestion, and garbage collection"
 readme = "README.md"
 license = "MIT"

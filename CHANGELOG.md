@@ -1,5 +1,26 @@
 # EngramKit Changelog
 
+## v0.2.1 -- 2026-04-15
+
+### Added
+
+- **Agentic chat endpoint.** `/api/chat` wires the engramkit MCP toolset (search, recall, kg_query, kg_timeline, wake_up, status, save, kg_add, diary_write) into the Claude Agent SDK loop so the assistant can iterate over memory tools instead of answering off a single pre-search. New SSE events stream tool inputs and results so the dashboard can surface them live.
+- **Inline citations in the chat UI (Perplexity-style).** Assistant messages can cite chunks with `[^N]` markers that render as indigo superscript pills. Hover shows a Radix HoverCard preview (file, score, wing badge, content); click smooth-scrolls to a registry-driven references panel below the message. Raw file paths in the prose are also auto-linked when they match a known chunk. Unresolved citations render as muted gray chips so trust gaps are explicit.
+- **Per-tool result renderers in the chat bubble.** `engramkit_search` renders as clickable chunk cards, `engramkit_kg_query` as fact rows, `engramkit_recall` per-repo, `Read`/`Grep`/`Glob` as structured views, fallback as a collapsible JSON tree.
+
+### Changed
+
+- **Chat UI rebuilt as a modular tree.** Single 960-line `chat.tsx` split into a focused `views/chat/` module: types, hooks (sessions, stream, citation registry, vault list, streaming bubble), lib (storage, tool summary, stream store), and presentation components. Each file <300 lines except the renderer dispatch table.
+- **Streaming uses an external store.** The in-flight assistant bubble lives in a `useSyncExternalStore`-backed singleton; committed messages are memo'd and never re-render during streaming. Per-turn React state updates dropped from ~200 to 2.
+- **Inline tool-call timeline.** Tool events interleave chronologically inside the assistant bubble (collapsible) instead of clustering at the bottom — users can see what the agent did to reach an answer.
+
+### Fixed
+
+- **Hydration mismatch on first render.** `useChatSessions` no longer reads `localStorage` in `useState`; it hydrates in `useEffect` so SSR and first client render agree on session count.
+- **Next 16 dev compatibility.** `[[...slug]]/page.tsx` enumerates all top-level routes in `generateStaticParams` (required by `output: "export"` — `/chat`, `/search`, `/settings`, `/vaults` were 500ing). Added `suppressHydrationWarning` on `<html>` for font CSS hash drift and browser-extension attribute injection.
+- **POST `/api/chat` no longer hits the dashboard origin.** Chat stream reads `NEXT_PUBLIC_ENGRAMKIT_API_URL` like other API calls; previously the relative URL was rewritten to `/api/chat/` by `trailingSlash: true` and trapped by the SPA catch-all, returning 500.
+- **Aborted tool calls commit cleanly.** Hitting Stop mid-search stamps the in-flight tool call with `result: "(aborted)"` / `isError: true` instead of leaving forever-pending dots persisted into localStorage.
+
 ## v0.1.5 -- 2026-04-14
 
 ### Added

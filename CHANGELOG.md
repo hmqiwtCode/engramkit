@@ -1,5 +1,14 @@
 # EngramKit Changelog
 
+## v0.2.2 -- 2026-04-15
+
+Republishes v0.2.1 with the bundled dashboard rebuilt. v0.2.1 to PyPI shipped with a stale `engramkit/dashboard_static/` — the wheel had the new agentic backend but the old chat UI, because the release workflow did not run the dashboard build script. PyPI versions are immutable, so v0.2.2 is the corrected artifact. Source code unchanged versus v0.2.1; rebuild + workflow hardening only.
+
+### Fixed
+
+- **Bundled dashboard now matches the source.** The release workflow runs `setup-node@v4` + `npm ci` + `./scripts/build-dashboard.sh` before `python -m build`, so the wheel always packages a freshly-built UI. `scripts/build-dashboard.sh` also forces `NEXT_PUBLIC_ENGRAMKIT_API_URL=""` during the build so a developer's local `.env.local` (often pointing at `http://localhost:8000` for split-process dev) cannot leak into shipped JS — the bundled dashboard is served same-origin by the Python API.
+- **Release skill (`.claude/skills/release/SKILL.md`) updated** to add a step 3c that rebuilds the bundled dashboard and stages any diff in `engramkit/dashboard_static/`. Defense in depth — workflow auto-rebuilds AND the skill reminds the human.
+
 ## v0.2.1 -- 2026-04-15
 
 ### Added

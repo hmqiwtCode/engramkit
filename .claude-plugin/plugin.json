@@ -1,6 +1,6 @@
 {
   "name": "engramkit",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Long-term memory for Claude Code — hybrid search, git-aware ingestion, content-addressed chunks, and 12 MCP tools. Install once per project with `/plugin install engramkit` and Claude auto-loads memory on every session.",
   "author": {
     "name": "Quy Huynh",

@@ -95,7 +95,7 @@ export function useChatStream({
         }
       } finally {
         if (aborted) streamStore.markAbort();
-        const finalMessage = streamStore.finalise();
+        const finalMessage = await streamStore.finalise();
         if (finalMessage) onAssistantCommit(finalMessage);
         setStreaming(false);
         abortRef.current = null;

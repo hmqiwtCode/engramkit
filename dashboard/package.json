@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@radix-ui/react-hover-card": "^1.1.15",
     "@tailwindcss/typography": "^0.5.19",
     "date-fns": "^4.1.0",
     "lucide-react": "^1.8.0",

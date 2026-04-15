@@ -14,7 +14,7 @@ jobs:
   build:
     name: Build distribution
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -38,6 +38,23 @@ jobs:
 
       - name: Guard — plugin manifests must match pyproject version
         run: python scripts/sync-version.py --check
+
+      # Always rebuild the bundled dashboard from source so the wheel can never
+      # ship with stale static assets (engramkit 0.2.1 hit exactly this — the
+      # backend changed, the committed `engramkit/dashboard_static/` did not).
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dashboard dependencies
+        run: npm ci
+        working-directory: dashboard
+
+      - name: Rebuild bundled dashboard
+        run: ./scripts/build-dashboard.sh
 
       - name: Install build tools
         run: python -m pip install --upgrade pip build twine

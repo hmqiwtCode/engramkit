@@ -20,6 +20,7 @@ This skill captures the exact release flow wired up for this repo:
 - **Version must match the tag.** `pyproject.toml` has `version = "X.Y.Z"`. The tag must be `vX.Y.Z`. The release workflow has a guard that aborts on mismatch — respect it, don't work around it.
 - **The publish step needs manual approval.** Remind the user to click *Review deployments → Approve* in the Actions UI.
 - **PyPI versions are immutable.** If a bad version ships, bump to the next patch rather than trying to re-upload.
+- **The wheel bundles `engramkit/dashboard_static/` — the release workflow rebuilds it from source on every tag, BUT you must also commit a fresh local rebuild on the same release commit so contributors who `pip install -e .` see the same UI.** If you skip this and the workflow is somehow not yet patched, you'll ship a backend update with a stale UI (engramkit 0.2.1 did exactly this). When in doubt, run `./scripts/build-dashboard.sh` and commit any diff under `engramkit/dashboard_static/` before tagging.
 
 ## Steps
 
@@ -60,6 +61,31 @@ python scripts/sync-version.py
 `.claude-plugin/marketplace.json` to match. CI fails if these drift, so
 never skip this step.
 
+### 3c. Rebuild the bundled dashboard
+
+```bash
+./scripts/build-dashboard.sh
+```
+
+This runs `npx next build` in `dashboard/` and copies the static `out/`
+tree into `engramkit/dashboard_static/` — the directory the wheel ships
+to PyPI via `[tool.setuptools.package-data]`. The release workflow ALSO
+rebuilds it on every tag (defense in depth), but committing a fresh
+local rebuild on the release commit keeps `pip install -e .` consumers
+(devs, CI of downstream projects) in sync with the UI changes that ship
+in the wheel.
+
+If `git status` after the build shows no changes under
+`engramkit/dashboard_static/`, the dashboard source didn't actually
+move — proceed without staging. If it does show changes, include the
+whole `engramkit/dashboard_static/` directory in step 4's `git add`.
+
+Note: the script forces `NEXT_PUBLIC_ENGRAMKIT_API_URL=""` during the
+build so a developer's local `.env.local` (often pointing at
+`http://localhost:8000` for split-process dev) never leaks into the
+shipped JS bundles. Bundled dashboard is served same-origin by the
+Python API, so the empty base URL is correct.
+
 ### 4. Show the diff, then commit
 
 Run `git diff` and show the user. Proceed only on explicit confirmation (treat anything short of "yes / do it / lgtm / ship it" as a *no*).
@@ -68,6 +94,8 @@ On confirmation:
 
 ```bash
 git add pyproject.toml CHANGELOG.md .claude-plugin/plugin.json .claude-plugin/marketplace.json
+# Include the rebuilt dashboard if step 3c produced any diff:
+git add engramkit/dashboard_static/ 2>/dev/null || true
 git commit -m "chore: release <VERSION>"
 git push
 ```

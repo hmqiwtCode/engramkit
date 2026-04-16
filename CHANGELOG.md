@@ -1,5 +1,13 @@
 # EngramKit Changelog
 
+## v0.2.4 -- 2026-04-16
+
+Restore smooth typewriter-style text streaming in the chat dashboard.
+
+### Fixed
+
+- **Chat streaming is smooth again.** The v0.2.1 chat rebuild dropped the `useTypewriter` RAF smoothing — SSE deltas went straight to React, causing visible text jumps on network bursts. `streamStore` now buffers incoming text and drains it via `requestAnimationFrame` at an adaptive rate (floor 260 chars/sec, always within 250ms lag). Tool calls, abort, and finalise flush the buffer to preserve chronological ordering and responsiveness.
+
 ## v0.2.3 -- 2026-04-15
 
 Pure infra release — no source code changes since v0.2.2. Validates the new CI pipeline by shipping a wheel produced through it end-to-end.
